@@ -31,6 +31,7 @@ export const App: FC = () => {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
 
   const [appState, setAppState] = useState<AppState | null>(initAppState);
   const { input: cleanInput, output } = appState ?? { output: null };
@@ -103,6 +104,10 @@ export const App: FC = () => {
             onBlur={(e) => {
               // Ignore blur due to clicking the reset button.
               if (e.relatedTarget === resetButtonRef.current) return;
+
+              // Ignore blur due to clicking the submit button.
+              if (e.relatedTarget === submitButtonRef.current) return;
+
               e.currentTarget.form?.requestSubmit();
             }}
             onKeyDown={(e) => {
@@ -144,6 +149,7 @@ export const App: FC = () => {
           />
 
           <Button
+            ref={submitButtonRef}
             type="submit"
             size="large"
             variant="contained"
