@@ -1,3 +1,5 @@
+import { isNotNull } from './utils';
+
 export const ALPHABET = new Map([
   ['a', 'Alfa'],
   ['b', 'Bravo'],
@@ -117,15 +119,15 @@ export const getNatoCharacterDetails = (input: string) => {
 export const getNatoPayloadDetails = (input: string) => {
   return input
     .toLowerCase()
-    .replace(/[^a-z0-9.\s\n]+/g, ' ')
+    .replace(/[^a-z0-9.]+/g, ' ')
     .trim()
     .split(' ')
-    .filter((str) => str)
+    .filter(isNotNull)
     .map((word) => ({
       input: word,
       output: (word.match(/1000(?!\d)|100(?!\d)|./g) ?? [])
         .map(getNatoCharacterDetails)
-        .filter((char) => char != null)
+        .filter(isNotNull)
     }));
 };
 
