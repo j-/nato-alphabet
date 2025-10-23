@@ -35,6 +35,8 @@ const initialInputValue = getCurrentParamValue();
 
 /** Initialize the output if there is input on page load. */
 const initialOutputValue = (() => {
+  // TODO: Use history.state if available.
+  // TODO: Replace history.state when input exists in URL.
   return initialInputValue ?
     getNatoPayloadDetails(initialInputValue) :
     null;
@@ -99,7 +101,6 @@ export const App: FC = () => {
         <Stack gap={2}>
           <TextField
             type="text"
-            size="small"
             multiline
             id={`${id}-input`}
             name="input"
@@ -108,12 +109,18 @@ export const App: FC = () => {
             autoCorrect="off"
             autoFocus={shouldAutoFocus}
             placeholder="Type here"
+            enterKeyHint="done"
             onBlur={(e) => {
               e.currentTarget.form?.requestSubmit();
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.metaKey) {
-                e.currentTarget.closest('form')?.requestSubmit();
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.metaKey || e.shiftKey) {
+                  document.execCommand('insertText', undefined, '\n');
+                } else {
+                  e.currentTarget.closest('form')?.requestSubmit();
+                }
               }
             }}
             slotProps={{
