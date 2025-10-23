@@ -116,6 +116,10 @@ export const getNatoCharacterDetails = (input: string) => {
   return [NatoType.UNKNOWN] as const;
 };
 
+export type NatoCharacterDetails = ReturnType<
+  typeof getNatoCharacterDetails
+>;
+
 export const getNatoPayloadDetails = (input: string) => {
   return input
     .toLowerCase()
@@ -134,3 +138,5 @@ export const getNatoPayloadDetails = (input: string) => {
 export type NatoPayloadDetails = ReturnType<
   typeof getNatoPayloadDetails
 >;
+
+export type NatoWordDetails = NatoPayloadDetails[number];
