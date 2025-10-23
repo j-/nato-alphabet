@@ -15,5 +15,5 @@ bun lint
 bun preview
 
 # Deploy to `gh-pages` branch.
-bun deploy
+bun run deploy
 ```
