@@ -6,47 +6,34 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import {
-  type FC,
-  type FormEventHandler,
   useCallback,
   useEffect,
   useId,
   useRef,
   useState,
+  type FC,
+  type FormEventHandler,
 } from 'react';
-import { getNatoPayloadDetails, type NatoPayloadDetails } from './nato';
 import { AppOutput } from './AppOutput';
+import {
+  getCurrentParamValue,
+  initAppState,
+  pushAppState,
+  type AppState,
+} from './app-state';
+import { getNatoPayloadDetails } from './nato';
 
 /** Don't auto-focus the main input if in an iframe. */
 const shouldAutoFocus = window.parent === window;
 
-/** Query param to read/write. */
-const paramInput = 'input';
-
-/** Get the value of {@link paramInput}. */
-const getCurrentParamValue = () => {
-  const params = new URLSearchParams(window.location.search);
-  const value = params.get(paramInput);
-  return value;
-};
-
-/** The value of {@link paramInput} on page load. */
-const initialInputValue = getCurrentParamValue();
-
-/** Initialize the output if there is input on page load. */
-const initialOutputValue = (() => {
-  // TODO: Use history.state if available.
-  // TODO: Replace history.state when input exists in URL.
-  return initialInputValue ?
-    getNatoPayloadDetails(initialInputValue) :
-    null;
-})();
-
 export const App: FC = () => {
   const id = useId();
+
   const inputRef = useRef<HTMLInputElement>(null);
-  const [cleanInput, setCleanInput] = useState('');
-  const [output, setOutput] = useState<NatoPayloadDetails | null>(initialOutputValue);
+  const resetButtonRef = useRef<HTMLButtonElement>(null);
+
+  const [appState, setAppState] = useState<AppState | null>(initAppState);
+  const { input: cleanInput, output } = appState ?? { output: null };
 
   const handleSubmit = useCallback<FormEventHandler<HTMLFormElement>>((e) => {
     e.preventDefault();
@@ -60,25 +47,28 @@ export const App: FC = () => {
       // Input must not already be in URL.
       input !== getCurrentParamValue()
     ) {
-      setCleanInput(input);
+      console.log('handleSubmit() pushstate', { input, cleanInput });
       const output = getNatoPayloadDetails(input);
-      setOutput(output);
-      const url = new URL(window.location.href);
-      url.searchParams.set(paramInput, input);
-      console.count('pushstate');
-      history.pushState({ input, output }, '', url.toString());
+      const appState: AppState = { input, output, };
+      setAppState(appState);
+      pushAppState(appState);
     }
   }, [cleanInput]);
 
   useEffect(() => {
     const handler = (e: PopStateEvent) => {
-      console.log(e.type, e.state);
       if (e.state) {
-        inputRef.current!.value = e.state.input;
-        setOutput(e.state.output as NatoPayloadDetails);
+        const appState: AppState = {
+          input: e.state.input,
+          output: e.state.output,
+        };
+        setAppState(appState);
       } else {
-        inputRef.current!.value = '';
-        setOutput(null);
+        const appState: AppState = {
+          input: '',
+          output: null,
+        };
+        setAppState(appState);
       }
     };
     window.addEventListener('popstate', handler);
@@ -88,10 +78,10 @@ export const App: FC = () => {
   }, []);
 
   useEffect(() => {
-    if (initialInputValue) {
-      inputRef.current!.value = initialInputValue;
+    if (cleanInput) {
+      inputRef.current!.value = cleanInput;
     }
-  }, []);
+  }, [cleanInput]);
 
   return (
     <Box m={2} mx="auto" p={2} maxWidth="80ch">
@@ -111,6 +101,8 @@ export const App: FC = () => {
             placeholder="Type here"
             enterKeyHint="done"
             onBlur={(e) => {
+              // Ignore blur due to clicking the reset button.
+              if (e.relatedTarget === resetButtonRef.current) return;
               e.currentTarget.form?.requestSubmit();
             }}
             onKeyDown={(e) => {
@@ -130,11 +122,15 @@ export const App: FC = () => {
               input: {
                 endAdornment: (
                   <IconButton
+                    ref={resetButtonRef}
                     type="reset"
                     onClick={() => {
                       inputRef.current?.focus();
-                      setCleanInput('');
-                      setOutput(null);
+                      const appState: AppState = {
+                        input: '',
+                        output: null,
+                      };
+                      setAppState(appState);
                     }}
                     sx={{
                       alignSelf: 'start',
