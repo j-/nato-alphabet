@@ -1,5 +1,15 @@
-Nato alphabet
-=============
+[Nato alphabet][site]
+=====================
+
+[site]: https://skeoh.com/nato-alphabet
+
+## Features
+
+- Differentiate each letter and number by color for better legibility.
+- Persists state to URL for easy sharing, bookmarking etc.
+- Uses `history.pushState()` and `history.state` for improved performance.
+
+## Commands
 
 ```sh
 # Run dev server.
